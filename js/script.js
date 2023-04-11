@@ -1,15 +1,23 @@
+const fs = require ('fs');
+
+
 class ProductManager {
     static ultimo_id = 0;
+    fs = require ('fs');
+    archivo = "../Data"
 
-    constructor() {
+    constructor(archivoJson) {
+        this.archivoJson = archivoJson;
         this.Products = [];
+        
     }
 
     getProducts() {
         console.log(this.Products)
+      
     }
 
-    addProduct(title, description, price, thumbnail, code, stock) {
+    addProduct = async(title, description, price, thumbnail, code, stock) => {
         ProductManager.ultimo_id = ProductManager.ultimo_id + 1;
 
         const newPoduct = {
@@ -22,6 +30,9 @@ class ProductManager {
             stock: stock
         }
         this.Products.push(newPoduct)
+
+
+        await fs.promises.writeFile(this.archivoJson, JSON.stringify(this.Products))
     }
 
     getProductById(id) {
@@ -61,11 +72,8 @@ class ProductManager {
 }
 
 
-
-
-
 //agregar y mostrar productos//
-const manager = new ProductManager();
+const manager = new ProductManager('./productos.json');
 manager.addProduct('Lapiz', 'Para escribir', 25, "./img/lapiz.jpg", 'AXA1', 45);
 manager.addProduct('Borrador', 'Para Borrar', 15, "./img/borrador.jpg", 'AXX2', 57)
 manager.addProduct('Cuaderno', 'Donde anotar todo lo que necesitas', 135, "./img/cuaderno.jpg", "AAWQ3")
