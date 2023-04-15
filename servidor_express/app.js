@@ -11,35 +11,35 @@ const camposRequeridos = [ 'id', 'title', 'description', 'price','thumbnail','co
 server.use(express.json);
 
 server.use(express.urlencoded({ extended: true }));
-server.listen(puerto, () => {
-    console.log(`Servidor express activo en ${puerto}`)
-});
 
 server.get("/products", async (req, res) => {
-    var limit = req.query.limit
-    const productos = await fs.promises.readFile(products,'utf-8');
-    const productosJson = await JSON.parse(productos);
-    res.send (productosJson + limit)
-})
-server.get("/products", async (req, res) => {
-    const productos = await fs.promises.readFile(products,'utf-8');
-    const productosJson = await JSON.parse(productos);
-    res.send(productosJson)
+  const limit = parseInt(req.query.limit) || productosJson.lenght;
+  const productos = await fs.promises.readFile(products,'utf-8');
+  const productosJson = await JSON.parse(productos);
+  const productosFiltrado = db.get("produtosJson").value().slice(0, limit);
+  
+  
+  res.send (productosFiltrado)
+
 })
 
 
 server.get("/products/:id",async (req, res) => {
-    try {
-        const productos = await fs.promises.readFile(products, 'utf-8');
-        const productosJson = await JSON.parse(productos);
-        const producto = productosJson.find(product => product.id === parseInt(req.params.id));
-        if (producto) {
-            res.status(200).send(producto);
-        } else {
-            res.status(404).send({ mensaje: 'ERROR: no se encuentra el id' });
-        }
-    } catch(err) {
-        console.log(err);
-        res.status(500).send(err);
-    };
+  try {
+    const productos = await fs.promises.readFile(products, 'utf-8');
+    const productosJson = await JSON.parse(productos);
+    const producto = productosJson.find(product => product.id === parseInt(req.params.id));
+    if (producto) {
+      res.status(200).send(producto);
+    } else {
+      res.status(404).send({ mensaje: 'ERROR: no se encuentra el id' });
+    }
+  } catch(err) {
+    console.log(err);
+    res.status(500).send(err);
+  };
 })
+
+server.listen(puerto, () => {
+      console.log(`Servidor express activo en ${puerto}`)
+  });
