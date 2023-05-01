@@ -1,15 +1,14 @@
-import fs from 'fs';
-
+import fs from 'fs'
 
 class ProductManager {
+
 
     constructor(archivoJson) {
         this.archivoJson = archivoJson;
         this.products = [];
         this.ultimo_id = 1;
         this.status = 0;
-        this.statusMsg = 'inicializado'
-        
+        this.statusMsg = 'inicializado' 
     }
 
     static requireFilds = ['title','description', 'price', 'thumbnail', 'code', 'stock']
@@ -34,17 +33,14 @@ class ProductManager {
     showStatusMsg = () => {
         return this.statusMsg
     }
+
     getProducts = async () => {
-        try{
-        const products = await this.#readProductsFromFile();
+      
+        const products = await fs.promises.readFile(this.archivoJson, 'utf-8')
+        const listaProductosJson = JSON.parse(products);
         this.status = 1;
         this.statusMsg = 'Productos recuperados'
-        return products;
-     }  catch{
-            this.status = -1;
-            this.statusMsg = `getProducts: ${err}`;
-        }
-      
+        return listaProductosJson; 
     }
 
     addProduct = async (product) => {

@@ -5,5 +5,14 @@
             <h1><b>Bienvenido al SISTEMA DE USUARIOS</b></h1>
         </header>
     </div>
-
+    <div class="row">
+        <div class="col-12 m-3">
+            <ul>
+                {{#each products}}
+                <li>ID {{this.id}}, {{this.description}} (${{this.price}}) ({{this.stock}})</li>
+                {{/each}}
+            </ul>
+        </div>
+    </div>
 </div>
+

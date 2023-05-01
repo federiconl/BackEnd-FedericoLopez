@@ -1,3 +1,4 @@
+
 [{"id":1,"title":"Lapiz","description":"Para escribir","price":25,"thumbnail":"./img/lapiz.jpg","code":"AXA1","stock":45},
 {"id":2,"title":"Borrador","description":"Para Borrar","price":15,"thumbnail":"./img/borrador.jpg","code":"AXX2","stock":57},
 {"id":3,"title":"Cuaderno","description":"Donde anotar todo lo que necesitas","price":135,"thumbnail":"./img/cuaderno.jpg","code":"AXX3","stock":44},
