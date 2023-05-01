@@ -1,6 +1,6 @@
 import express from 'express';
 import routerP from './api/products/productsRoutes.js';
-import routerCart from './api/cart/carts.js';
+import routerCart from './api/cart/cartsRouter.js';
 import { __dirname } from './utils.js';
 import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
