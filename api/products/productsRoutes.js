@@ -5,14 +5,23 @@ import { __dirname } from '../../utils.js';
 
 
 const routerP = Router();
-const manager = new ProductManager(`${__dirname}/data/products.json`); 
+const manager = new ProductManager(`${__dirname}/data/productos.json`); 
 
-routerP.get ('/realtimeproducts', async (req,res) =>{
+
+routerP.get ('/', async (req,res) =>{
     const products = await manager.getProducts();
     res.render ('index', {
         products: products
     })
 })
+
+routerP.get ('/realtimeproducts', async (req,res) =>{
+    const products = await manager.getProducts();
+    res.render ('home', {
+        products: products
+    })
+})
+
 
 routerP.get('/products', async (req, res) => {
     try {
