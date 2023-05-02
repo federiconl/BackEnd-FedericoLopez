@@ -1,65 +1,43 @@
-
 import { Router } from "express";
+import CartManager from "./carts.js";
+import { __dirname } from "../../utils.js";
+
 
 const routerCart = Router();
 
-const carts = [];
+const manager = new CartManager(`${__dirname}/data/carritos.json`); 
 
-routerCart.post('/', (req, res) => {
-    const { id, products } = req.body
-    res.send ('Nuevo cart creado')
+routerCart.post('/', async(req, res) => {
+  try {
+   await manager.addProduct(req.body);
 
-    const cart = {
-        id: cartId + 1,
-        products: products,
-    };
-    cartId++;
-    carts.push(cart);
-    return cart;
-
-
-
-
-
-})
-
-routerCart.get("/:cid", (req, res) => {
-
-    const products_cart = products.filter(
-        product => product.cart_id === req.params.cid
-    );
-    res.json(products_cart);
+   if (manager.checkStatus() === 1){
+       res.status(200).send({ status: 'OK', msg: manager.showStatusMsg() });
+       } else {
+           res.status(400).send({ status: 'ERR', error: manager.showStatusMsg() });
+       }
+   } catch (err) {
+       res.status(500).send({ status: 'ERR', error: err });
+   }
 });
 
-
-
-routerCart.post('/:cid/product/:pid', (req, res) => {
-    var cid = req.params.cid;
-    var pid = req.params.pid;
-    var cart = Cart.get(cid);
-    var prod = Product.get(pid);
-  
-    if (cart.products.length === 0) {
-      var prod = {product: pid, quantity: 1}
-      cart.products.push(prod);
-    }
-    else {
-      var exist = false;
-      for (var i = 0; i < cart.products.length; i++) {
-        if (cart.products[i].product === pid) {
-          cart.products[i].quantity += 1;
-          exist = true;
-        }
+routerCart.get("/carts/:cid/product/:pid", async (req, res) => {
+  try {
+      const carts = await manager.getCarts();
+      const cartsID = carts.find(cart => cart.id === parseInt(req.params.id));
+      if (cartsID) {
+          res.status(200).send(carrito);
+      } else {
+          res.status(404).send({ mensaje: 'ERROR: no se encuentra el id' });
       }
-      if (exist === false) {
-        var prod = {product: pid, quantity: 1}
-        cart.products.push(prod);
-      }
-    }
-  
-    res.send(cart.products);
-  
+  } catch (err) {
+      console.log(err);
+      res.status(500).send(err);
+  };
 })
+
+
+
 
 routerCart.get('/', (req, res) => {
     res.status(200).send('SISTEMA INICIADO')
