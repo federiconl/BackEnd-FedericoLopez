@@ -1,5 +1,5 @@
 import fs from 'fs';
-
+import productModel from './productModel.js';
 
 class ProductManager {
 
@@ -37,7 +37,7 @@ class ProductManager {
     
     getProducts = async () => {
         try{
-        const products = await this.#readProductsFromFile();
+        const products = await productModel.find().lean()
         this.status = 1;
         this.statusMsg = 'Productos recuperados'
         return products;
@@ -74,8 +74,7 @@ class ProductManager {
         try{
 
         this.status = 1;
-        const products = await this.#readProductsFromFile();
-        const product = products.find(product => product.id === id);
+        const product = productModel.findById(id)
     
 
         if (product)  return (product);
@@ -114,18 +113,9 @@ class ProductManager {
 
     deleteProduct = async (id) => {
         try {
-            const products = await this.#readProductsFromFile();
-            const productsFiltered = products.filter(product => product.id !== id);
-
-            if (productsFiltered.length === products.length) {
-                this.status = -1;
-                this.statusMsg = "ID no encontrado";
-                return;
-            }
-
-            await fs.promises.writeFile(this.archivoJson, JSON.stringify(productsFiltered));
+            const process = await productModel.deleteOne({ '_id': new mongoose.Types.ObjectId(id) });
             this.status = 1;
-            this.statusMsg = "Producto borrado";
+            process.deletedCount === 0 ? this.statusMsg = "El ID no existe": this.statusMsg = "Producto borrado";
         } catch (err) {
             this.status = -1;
             this.statusMsg = `deleteProduct: ${err}`;

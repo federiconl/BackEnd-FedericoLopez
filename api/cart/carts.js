@@ -1,26 +1,12 @@
+import mongoose from "mongoose";
+import cartModel from "./cartsModel.js";
+import productModel from "../products/productModel.js";
+
+
 class CartManager {
-    constructor(archivoJSON) {
-        this.archivoJSON = archivoJSON;
-        this.lastID = 1;
-        this.carts = [];
+    constructor() {
         this.status = 0;
-        this.statusMsg = 'inicializado'
-    }
-
-
-    static requireFilds = ['products']
-
-    static #verifyRequiredFields = (obj) => {
-        return CartManager.requireFilds.every(field => Object.prototype.hasOwnProperty.call(obj, field) && obj[field] !== null)
-    }
-
-    static #objEmpty(obj) {
-        return Object.keys(obj).length === 0;
-    }
-
-    #readProductsFromFile = async () => {
-        const data = await fs.promises.readFile(this.archivoJson, 'utf-8')
-        return data === '' ? [] : JSON.parse(data);
+        this.statusMsg = "inicializado";
     }
 
     checkStatus = () => {
@@ -33,60 +19,107 @@ class CartManager {
 
     getCarts = async () => {
         try {
-            const carts = await this.#readProductsFromFile();
+            const carts = await cartModel.find();
             this.status = 1;
-            this.statusMsg = 'Productos recuperados'
+            this.statusMsg = 'Carritos recuperados'
             return carts;
         } catch {
             this.status = -1;
-            this.statusMsg = `getProducts: ${err}`;
+            this.statusMsg = `getCarts: ${err}`;
         }
 
     }
 
-    newCart = async (cart) => {
+    addCart = async (newCart) => {
         try {
-
-
-            if (!CartManager.#objEmpty(product) && CartManager.#verifyRequiredFields(cart)) {
-                this.carts = await this.#readProductsFromFile();
-
-                this.lastId = this.carts[this.carts.length - 1].id;
-                this.carts.push({ id: ++this.latestId, ...cart });
-                await fs.promises.writeFile(this.archivoJson, JSON.stringify(this.carts));
-
-                this.status = 1;
-                this.statusMsg = "Producto registrado en archivo";
+            if (newCart !== undefined && newCart.products.length > 0) {
+                console.log(newCart);
+                const process = await cartModel.create(newCart);
+                return process;
             }
 
+            return {};
         } catch (err) {
-            this.status = -1;
-            this.statusMsg = `newCart: ${err}`;
+            console.log(err.message);
         }
     };
 
-    addToCart = async (productId, quantity, cartId) => {
-        const cart = this.carts.find(cart => cart.id === cartId);
-
-        if (!cart) {
-            throw new Error(`No se encontró un carrito con el ID ${cartId}`);
+    updateCart = async (id, new_product) => {
+        try {
+            const cart_updated = await cartModel.findOneAndUpdate(
+                { _id: id },
+                { $push: { products: new_product }},
+                { new: true }
+            );
+            
+            this.status = 1;
+            this.statusMsg = 'Carrito actualizado';
+            return cart_updated;
+        } catch (err) {
+            this.status = -1;
+            this.statusMsg = `updateCart: ${err}`;
         }
+    }
 
-        const existingProduct = cart.products.find(product => product.id === productId);
+    updateProductQty = async (id, pid, new_product_qty) => {
+        try {
+            const carts = await cartModel.findOneAndUpdate(
+                { _id: id, 'products.pid': pid },
+                { $set: { 'products.$.qty': new_product_qty }},
+                { new: true }
+            );
 
-        if (existingProduct) {
-            existingProduct.quantity += quantity;
-        } else {
-            const product = {
-                id: productId,
-                quantity: quantity
-            };
-
-            cart.products.push(product);
-            await fs.promises.writeFile(this.archivoJson, JSON.stringify(this.carts));
+            this.status = 1;
+            this.statusMsg = 'Cantidad de producto actualizada en carrito';
+            return process;
+        } catch (err) {
+            this.status = -1;
+            this.statusMsg = `updateProductQty: ${err}`;
         }
+    }
+
+    getCartPopulated = async (id) => {
+        try {
+            const cart = await cartModel.find({ _id: new mongoose.Types.ObjectId(id) }).populate({ path: 'products.pid', model: productModel });
+            this.status = 1;
+            this.statusMsg = 'Carrito recuperado';
+            return cart;
+        } catch (err) {
+            this.status = -1;
+            this.statusMsg = `getCarts: ${err}`;
+        }
+    }
+    emptyCart = async (id) => {
+        try {
+            const process = await cartModel.findOneAndUpdate(
+                new mongoose.Types.ObjectId(id),
+                { $set: { products: [] }
+            });
+            this.status = 1;
+            this.statusMsg = 'Carrito vaciado';
+            return process;
+        } catch (err) {
+            return false;
+        }
+    }
 
 
+    deleteCartProduct = async (id, pid) => {
+        try {
+            const process = await cartModel.findByIdAndUpdate(
+                new mongoose.Types.ObjectId(id),
+                { $pull: { products: { pid: new mongoose.Types.ObjectId(pid) }}},
+                { new: true }
+            )
+
+            console.log(process);
+            this.status = 1;
+            this.statusMsg = 'Producto quitado del carrito';
+            return process;
+        } catch (err) {
+            this.status = -1;
+            this.statusMsg = `deleteCartProduct: ${err}`;
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import ProductManager from './products.js';
+import ProductManager from './productsManager.js';
 import { __dirname } from '../../utils.js';
 
 
@@ -8,6 +8,9 @@ const routerP = Router();
 const manager = new ProductManager(`${__dirname}/data/productos.json`); 
 
 
+ 
+
+//handlebars
 routerP.get ('/', async (req,res) =>{
     const products = await manager.getProducts();
     res.render ('index', {
@@ -23,6 +26,8 @@ routerP.get ('/realtimeproducts', async (req,res) =>{
 })
 
 
+
+//express
 routerP.get('/products', async (req, res) => {
     try {
         const products = await manager.getProducts();
