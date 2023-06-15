@@ -5,40 +5,64 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
-
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import FileStore  from 'session-file-store';
 
 
 import routerP from './api/products/productsRoutes.js';
 import routerCart from './api/cart/cartsRouter.js';
 
 import { __dirname } from './utils.js';
+import path from 'path';
 
 const PUERTO = parseInt(process.env.PUERTO) || 3000;
-const WS_PORT = 8000;
-const MONGOOSE_URL = process.env.MONGOOSE_URL;
-// Servidor Express base
-const server = express();
-const app = http.createServer(server)
-const httpServer = server.listen(WS_PORT, () => {
-    console.log(`Servidor socketio iniciado en puerto ${WS_PORT}`);
+const MONGOOSE_URL = process.env.MONGOOSE_URL || 'mongodb://127.0.0.1:27017/products';
+const COOKIE_SECRET = 'perritonoah0108'
+const BASE_URL = `http://localhost:${PUERTO}`;
+const PRODUCTS_PER_PAGE = 10;
+
+// SERVIDOR EXPRESS y SOCKET.IO INTEGRADO
+const app = express();
+const server = http.createServer(app);
+// Creamos nueva instancia para el servidor socket.io, activando módulo cors con acceso desde cualquier lugar (*)
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["PUT", "GET", "POST", "DELETE", "OPTIONS"],
+        credentials: false
+    }   
 });
 
-const io = new Server(httpServer, { cors: { origin: "http://localhost:3000" }});
+// Parseo correcto de urls
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-server.use(express.json());
-server.use(express.urlencoded({ extended: true }));
+//Parseo de cookies
+app.use(cookieParser(COOKIE_SECRET));
+
+//manejo sessions
+const fileStorage = FileStore(session)
+const store = new fileStorage({path: `${__dirname}/sessions`, ttl: 3600, retries : 0})
+app.use(session({
+    store: store,
+    secret : COOKIE_SECRET ,
+    resave : false ,
+    saveUninitialized : false
+}));
+
 
 // Endpoint API//
-server.use('/api', routerP);
-server.use('/api', routerCart);
+app.use('/api', routerP);
+app.use('/api', routerCart);
 
 // Contenido static
-server.use('/public', express.static(`${__dirname}/public`));
+app.use('/public', express.static(`${__dirname}/public`));
 
 // Motor de plantillas
-server.engine('handlebars', engine());
-server.set('view engine', 'handlebars');
-server.set('views', './views');
+app.engine('handlebars', engine());
+app.set('view engine', 'handlebars');
+app.set('views', './views');
 
 
 // ACTIVACION SERVIDOR GENERAL
