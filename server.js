@@ -12,12 +12,18 @@ import FileStore  from 'session-file-store';
 
 import routerP from './api/products/productsRoutes.js';
 import routerCart from './api/cart/cartsRouter.js';
+import userRoutes from './api/users/userRoutes.js';
+import mainRoutes from './api/main.routes.js';
+
+import userModel from './api/users/usersModel.js';
+import productModel from './api/products/productModel.js';
+import cartModel from './api/cart/cartsModel.js';
 
 import { __dirname } from './utils.js';
 import path from 'path';
 
 const PUERTO = parseInt(process.env.PUERTO) || 3000;
-const MONGOOSE_URL = process.env.MONGOOSE_URL || 'mongodb://127.0.0.1:27017/products';
+const MONGOOSE_URL = process.env.MONGOOSE_URL;
 const COOKIE_SECRET = 'perritonoah0108'
 const BASE_URL = `http://localhost:${PUERTO}`;
 const PRODUCTS_PER_PAGE = 10;
@@ -55,6 +61,8 @@ app.use(session({
 // Endpoint API//
 app.use('/api', routerP);
 app.use('/api', routerCart);
+app.use('/api', userRoutes);
+app.use('/api', mainRoutes);
 
 // Contenido static
 app.use('/public', express.static(`${__dirname}/public`));

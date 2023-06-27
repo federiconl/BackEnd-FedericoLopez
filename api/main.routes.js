@@ -46,6 +46,12 @@ const mainRoutes = (io, store, baseUrl, productsPerPage) => {
         }); 
     });
 
+    router.get('/login', (req, res) => {
+
+        res.render('login');
+        
+    });
+
     router.get('/logout', async (req, res) => {
         req.session.userValidated = req.sessionStore.userValidated = false;
 

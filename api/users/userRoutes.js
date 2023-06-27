@@ -46,7 +46,7 @@ const userRoutes = (io) => {
         router.post('/users', validate, async (req, res) => {
             try {
                 await manager.addUser(req.body);
-                // Al haber "inyectado" io, podemos emitir eventos sin problemas al socket
+
                 io.emit('new_user', req.body);
         
                 if (manager.checkStatus() === 1) {
