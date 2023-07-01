@@ -1,9 +1,8 @@
-import mongoose from "mongoose";
-import cartModel from "../model/cartsModel.js";
-import productModel from "../model/productModel.js";
+import mongoose from 'mongoose';
+import productModel from '../model/productModel.js';
+import cartModel from '../model/cartsModel.js';
 
-
-class CartManager {
+class Carts {
     constructor() {
         this.status = 0;
         this.statusMsg = "inicializado";
@@ -14,24 +13,12 @@ class CartManager {
     }
 
     showStatusMsg = () => {
-        return this.statusMsg
-    }
-
-    getCarts = async () => {
-        try {
-            const carts = await cartModel.find();
-            this.status = 1;
-            this.statusMsg = 'Carritos recuperados'
-            return carts;
-        } catch {
-            this.status = -1;
-            this.statusMsg = `getCarts: ${err}`;
-        }
-
+        return this.statusMsg;
     }
 
     addCart = async (newCart) => {
         try {
+            // La primera vez, se crea el carrito y se inserta la lista inicial de productos que ya se solicitaron
             if (newCart !== undefined && newCart.products.length > 0) {
                 console.log(newCart);
                 const process = await cartModel.create(newCart);
@@ -78,9 +65,25 @@ class CartManager {
         }
     }
 
+    getCarts = async () => {
+        try {
+            const carts = await cartModel.find();
+            this.status = 1;
+            this.statusMsg = 'Carritos recuperados';
+            return carts;
+        } catch (err) {
+            this.status = -1;
+            this.statusMsg = `getCarts: ${err}`;
+        }
+    }
+
     getCartPopulated = async (id) => {
         try {
+            // Se realiza el populate del array products en el carrito, en base al productModel
+            // Atención, recordar importar el productModel arriba!
             const cart = await cartModel.find({ _id: new mongoose.Types.ObjectId(id) }).populate({ path: 'products.pid', model: productModel });
+            // Alternativamente se puede mantener acá la consulta base y utilizar el middleware pre en el archivo carts.model.js
+            // const cart = await cartModel.find({ _id: new mongoose.Types.ObjectId(id) });
             this.status = 1;
             this.statusMsg = 'Carrito recuperado';
             return cart;
@@ -89,12 +92,16 @@ class CartManager {
             this.statusMsg = `getCarts: ${err}`;
         }
     }
+
     emptyCart = async (id) => {
         try {
+            // Simplemente seteamos el array products a vacío []
             const process = await cartModel.findOneAndUpdate(
                 new mongoose.Types.ObjectId(id),
                 { $set: { products: [] }
             });
+
+            // Agregar lógica para verificar process y chequear si realmente hubo rows afectados
             this.status = 1;
             this.statusMsg = 'Carrito vaciado';
             return process;
@@ -103,6 +110,7 @@ class CartManager {
         }
     }
 
+    // Agregar método deleteCart para borrar directamente carrito
 
     deleteCartProduct = async (id, pid) => {
         try {
@@ -112,6 +120,7 @@ class CartManager {
                 { new: true }
             )
 
+            // Agregar lógica para verificar process y chequear si realmente hubo rows afectados
             console.log(process);
             this.status = 1;
             this.statusMsg = 'Producto quitado del carrito';
@@ -123,4 +132,4 @@ class CartManager {
     }
 }
 
-export default CartManager;
+export default Carts;

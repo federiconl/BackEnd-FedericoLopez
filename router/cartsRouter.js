@@ -1,12 +1,11 @@
 import { Router } from "express";
-import CartManager from "../services/carts.js";
+import Carts from "../services/carts.js";
 import { __dirname } from "../utils.js";
 
-
 const router = Router();
-const manager = new CartManager(`${__dirname}/data/carritos.json`); 
+const manager = new Carts();
 
-const routerCart = (io) => {
+const cartsRoutes = (io) => {
     router.get('/carts', async (req, res) => {
         try {
             const carts = await manager.getCarts();
@@ -27,6 +26,8 @@ const routerCart = (io) => {
 
     router.post('/carts', async (req, res) => {
         try {
+            // Verificar que se reciba en el body un array con al menos un producto,
+            // recién ahí llamar al método addCart
             const products_array = req.body;
             if (!Array.isArray(products_array.products)) {
                 res.status(400).send({ status: 'ERR', message: 'El body debe contener un array products con al menos un producto' });
@@ -41,6 +42,7 @@ const routerCart = (io) => {
 
     router.put('/carts/:id', async (req, res) => {
         try {
+            // tiene que pasarse un id y un body con el objeto del nuevo producto, verificar eso
             const product = req.body;
             await manager.updateCart(req.params.id, product);
 
@@ -109,4 +111,4 @@ const routerCart = (io) => {
     return router;
 }
 
-export default routerCart;
+export default cartsRoutes;

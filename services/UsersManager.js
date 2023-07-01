@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import userModel from '../model/usersModel.js';
 
-class UsersManager {
+class Users {
     constructor() {
         this.users = [];
         this.status = 0;
@@ -102,12 +102,12 @@ class UsersManager {
 
     validateUser = async (user, pass) => {
         try {
-            return await userModel.findOne({ userName: user, password: pass});
-            //return await userModel.findOne({ userName: user, password: crypto.createHash('sha256').update(pass).digest('hex')});
+            // Por ahora una validación muy sencilla, encriptando la clave recibida y comparando usuario y clave
+            return await userModel.findOne({ userName: user, password: crypto.createHash('sha256').update(pass).digest('hex')});
         } catch (err) {
             this.status = `validateUser: ${err}`;
         }
     }
 }
 
-export default UsersManager;
+export default Users;

@@ -1,10 +1,7 @@
 import mongoose from 'mongoose';
-
-mongoose.pluralize(null);
-
 const collection = 'users';
 
-const schema = new mongoose.Schema({        
+const schema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     userName: { type: String, required: true },
@@ -16,6 +13,3 @@ const schema = new mongoose.Schema({
 const userModel = mongoose.model(collection, schema);
 
 export default userModel;
-
-
-

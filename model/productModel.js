@@ -1,23 +1,24 @@
-import mongoose, { Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 
+const collection = 'products';
 
-
-mongoose.pluralize(null); // Importante! para no tener problemas con Mongoose
-
-
-const collection = 'Products'
-const schemaProducts = new mongoose.Schema({
-    _id: String,
-    id : Number,
-    title : String,
-    description : String,
-    price: Number,  
-    code : String, 
-    stock :  Number
+const schema = new mongoose.Schema({
+    id: Number,
+    title: { type: String, required: true, index: true }, // índice de búsqueda habilitado para este campo
+    description: String,
+    price: { type: Number, required: true },
+    discountPercentage: Number,
+    rating: { type: Number, required: true },
+    stock: { type: Number, required: true },
+    brand: String,
+    category: String,
+    thumbnail: String,
+    images: [String]
 });
+// Para utilizar paginado automático, basta con insertar el módulo mongoose-paginate-v2 como plugin
+schema.plugin(mongoosePaginate);
 
-schemaProducts.plugin(mongoosePaginate);
-const productModel = model(collection,schemaProducts);
+const productModel = mongoose.model(collection, schema);
 
 export default productModel;
