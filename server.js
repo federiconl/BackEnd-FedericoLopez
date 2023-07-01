@@ -7,32 +7,35 @@ import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
-import FileStore  from 'session-file-store';
+import MongoStore from 'connect-mongo';
+
+import productRoutes from './router/productsRoutes.js';
+import routerCart from './router/cartsRouter.js';
+import userRoutes from './router/userRoutes.js';
+import mainRoutes from './router/main.routes.js';
 
 
-import routerP from './api/products/productsRoutes.js';
-import routerCart from './api/cart/cartsRouter.js';
-import userRoutes from './api/users/userRoutes.js';
-import mainRoutes from './api/main.routes.js';
-
-import userModel from './api/users/usersModel.js';
-import productModel from './api/products/productModel.js';
-import cartModel from './api/cart/cartsModel.js';
 
 import { __dirname } from './utils.js';
 import path from 'path';
 
+const WS_PUERTO = parseInt(process.env.WS_PUERTO)||8000;
 const PUERTO = parseInt(process.env.PUERTO) || 3000;
-const MONGOOSE_URL = process.env.MONGOOSE_URL;
+const MONGOOSE_URL = 'mongodb+srv://ff:1717@cluster0.mue78ww.mongodb.net/';
 const COOKIE_SECRET = 'perritonoah0108'
-const BASE_URL = `http://localhost:${PUERTO}`;
-const PRODUCTS_PER_PAGE = 10;
+export const baseUrl = `http://localhost:${PUERTO}`;
+export const productsPerPage = 10;
 
 // SERVIDOR EXPRESS y SOCKET.IO INTEGRADO
 const app = express();
 const server = http.createServer(app);
 // Creamos nueva instancia para el servidor socket.io, activando módulo cors con acceso desde cualquier lugar (*)
-const io = new Server(server, {
+
+const httpServer = app.listen(WS_PUERTO, () =>{
+  console.log(`Servidor API/Socket.io iniciando en puerto ${WS_PUERTO}`)    
+}) 
+
+const io = new Server(httpServer, {
     cors: {
         origin: "*",
         methods: ["PUT", "GET", "POST", "DELETE", "OPTIONS"],
@@ -48,21 +51,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(COOKIE_SECRET));
 
 //manejo sessions
-const fileStorage = FileStore(session)
-const store = new fileStorage({path: `${__dirname}/sessions`, ttl: 3600, retries : 0})
+export const store = MongoStore.create({ mongoUrl: MONGOOSE_URL, mongoOptions: {}, ttl: 3600});
 app.use(session({
     store: store,
-    secret : COOKIE_SECRET ,
-    resave : false ,
-    saveUninitialized : false
-}));
-
+    secret: COOKIE_SECRET,
+    resave: false,
+    saveUninitialized: false
+}))
 
 // Endpoint API//
-app.use('/api', routerP);
-app.use('/api', routerCart);
-app.use('/api', userRoutes);
-app.use('/api', mainRoutes);
+app.use('/api', productRoutes(io));
+app.use('/api', routerCart(io));
+app.use('/api', userRoutes(io));
+app.use('/api', mainRoutes(io, store, baseUrl, productsPerPage));
 
 // Contenido static
 app.use('/public', express.static(`${__dirname}/public`));
@@ -70,19 +71,9 @@ app.use('/public', express.static(`${__dirname}/public`));
 // Motor de plantillas
 app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
-app.set('views', './views');
+app.set('views', `${__dirname}/views`);
 
 
-// ACTIVACION SERVIDOR GENERAL
-try {
-    await mongoose.connect(MONGOOSE_URL);
-    
-    app.listen(PUERTO, () => {
-        console.log(`Servidor iniciado en puerto ${PUERTO}`);
-    });
-} catch(err) {
-    console.log(`No se puede conectar con el servidor de bbdd (${err.message})`);
-}
 
 
 //Eventos socket.io
@@ -102,9 +93,97 @@ io.on('connection', (socket) => { // Escuchamos el evento connection por nuevas 
     });
 });
 
+// ACTIVACION SERVIDOR GENERAL
+try {
+   await mongoose.connect(MONGOOSE_URL,{ useNewUrlParser: true,
+    useUnifiedTopology: true,})
+   .then(() => {
+    console.log('Conexión exitosa a la base de datos');
+  })
+  .catch((error) => {
+    console.error('Error al conectar a la base de datos:', error);
+  });
+    app.listen(PUERTO, () => {
+        console.log(`Servidor iniciado en puerto ${PUERTO}`);
+    });
+} catch(err) {
+    console.log(`No se puede conectar con el servidor de bbdd (${err.message})`);
+}
 
 
 
 
+/*
+
+//PRUEBAS MOONGOOSE
+mongoose.connect(MONGOOSE_URL,{
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => {
+    console.log('Conexión exitosa a la base de datos');
+  })
+  .catch((error) => {
+    console.error('Error al conectar a la base de datos:', error);
+  });
+  
+  const collection = 'Products'
+  const USERSHEMA = new mongoose.Schema({
+    _id: String,
+    id : Number,
+    title : String,
+    description : String,
+    price: Number,  
+    code : String, 
+    stock :  Number
+  });
+  
+  const user = mongoose.model(collection, USERSHEMA);
+  
+  // Endpoint para verificar la conexión y obtener productos
+  app.get('/verificar-db', async (req, res) => {
+    try {
+      const productos = await user.find();
+      res.json(productos);
+    } catch (error) {
+      console.error('Error al obtener los productos:', error);
+      res.status(500).json({ error: 'Error al obtener los productos' });
+    }
+  });
+*/
+
+/*PRUEBAS MONGO CLIENT
+
+async function client() {
+    try {
+      const client = await MongoClient.connect(MONGOOSE_URL);
+      console.log('Conexión exitosa a la base de datos');
+  
+      
+  
+      client.close(); // Cierra la conexión al finalizar las operaciones
+    } catch (error) {
+      console.error('Error al conectar a la base de datos:', error);
+    }
+  }
+  
+  client();
 
 
+
+  app.get('/verificar-db', async (req, res) => {
+    try {
+      const client = await MongoClient.connect(MONGOOSE_URL);
+      console.log('Conexión exitosa a la base de datos');
+  
+      const collection = client.db('BackendFedericoLopez').collection('users');
+      const productos = await collection.find().toArray();
+  
+      res.json(productos);
+    } catch (error) {
+      console.error('Error al conectar a la base de datos:', error);
+      res.status(500).json({ error: 'Error al conectar a la base de datos' });
+    } finally {
+      client().close;
+    }
+  });*/
