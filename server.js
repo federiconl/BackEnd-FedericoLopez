@@ -17,13 +17,14 @@ import mainRoutes from './router/main.routes.js';
 
 
 import { __dirname } from './utils.js';
+import passport from 'passport';
 
 
 const PUERTO = parseInt(process.env.PUERTO) || 3000;
 const MONGOOSE_URL = 'mongodb://127.0.0.1/BackendFedericoLopez';
 const SESSION_SECRET = process.env.SESSION_SECRET;
-const baseUrl = `http://localhost:${PUERTO}`;
-const productsPerPage = 10;
+export const baseUrl = `http://localhost:${PUERTO}`;
+export const productsPerPage = 10;
 
 // SERVIDOR EXPRESS y SOCKET.IO INTEGRADO
 const app = express();
@@ -46,19 +47,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(SESSION_SECRET));
 
 //manejo sessions
-const store = MongoStore.create({ mongoUrl: MONGOOSE_URL, mongoOptions: {}, ttl: 3600});
+export const store = MongoStore.create({mongoUrl:MONGOOSE_URL, mongoOptions:{}, ttl: 30});
 app.use(session({
     store: store,
     secret: SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
-}))
+    saveUninitialized: true,
+    cookie: { secure: true }
+}));
+
+//pasport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Endpoint API//
 app.use('/api', productRoutes(io));
 app.use('/api', routerCart(io));
 app.use('/api', userRoutes(io));
-app.use('/api', mainRoutes(io, store, baseUrl, productsPerPage));
+app.use('/', mainRoutes(io, store, baseUrl, productsPerPage));
 
 // Contenido static
 app.use('/public', express.static(`${__dirname}/public`));
@@ -103,6 +109,7 @@ try {
 } catch(err) {
   console.log(`No se puede conectar con el servidor de bbdd (${err.message})`);
 }
+
 
 
 

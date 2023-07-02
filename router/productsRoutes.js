@@ -14,7 +14,7 @@ const productRoutes = (io) => {
         }
     }
 
-    router.get('/products', async (req, res) => {
+    router.get('/products',validate,async (req, res) => {
         try {
             const products = await manager.getProducts();
             res.status(200).send({ status: 'OK', data: products });
@@ -23,6 +23,12 @@ const productRoutes = (io) => {
         }
     });
     
+    router.get('/session', async (req,res)=>{
+        req.session.cuenta = req.session.cuenta ? req.session.cuenta + 1 : 1 
+         res.status(200).send(`Hola has visto esta página ${req.session.cuenta}`); 
+    })
+
+
     router.post('/products', validate, async (req, res) => {
         try {
             await manager.addProduct(req.body);

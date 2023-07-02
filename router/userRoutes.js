@@ -17,7 +17,7 @@ const userRoutes = (io) => {
         }
     }
        
-    router.get('/users/:id?', validate,  async (req, res) => { // ? indica que el parámetro es opcional
+    router.get('/users/:id?',  async (req, res) => { // ? indica que el parámetro es opcional
         try {
             if (req.params.id === undefined) {
                 const users = await manager.getUsers();

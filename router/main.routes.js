@@ -1,91 +1,93 @@
 import { Router } from "express";
-import Users from "../services/UsersManager.js";
-import Products from "../services/productsManager.js";
+import userModel from "../model/usersModel.js";
+import { createHash, isValidPassword } from "../utils.js";
+import passport from "../auth/passport.local.js"
+import { store,productsPerPage,baseUrl } from "../server.js";
 
-const users = new Users();
-const manager = new Products();
-
-const mainRoutes = (io, store, baseUrl, productsPerPage) => {
+const mainRoutes = (io, store, productsPerPage,baseUrl) => {    
     const router = Router();
 
-    router.get('/', async (req, res) => {        
-        // Tratamos de reguperar los datos de sesión, en caso de cumplirse el TTL por ejemplo
-        // data será null y de esa forma podremos redireccionar al login aunque el usuario
-        // haya dejado su sesion abierta. Esta es una opción sencilla de control que funciona
-        // bien con el almacenamiento de sesiones en MongoDB, pero pueden requerirse ajustes
-        // para trabajar con almacenamiento en archivos.
+    router.get('/', async (req, res) => {
         store.get(req.sessionID, async (err, data) => {
             if (err) console.log(`Error al recuperar datos de sesión (${err})`);
 
-            if (data !== null && (req.session.userValidated || req.sessionStore.userValidated)) {
-                // Esto permite hacer posteriores llamadas a este mismo endpoint con distintos offsets para el paginado
-                if (req.query.page === undefined) req.query.page = 0;
-    
-                // Recordar que en este caso getProductsPaginated() utiliza el módulo paginate
-                // que fue habilitado como plugin en el archivo de modelo, y este paginate retorna
-                // un objeto contenido un item docs con el contenido de la consulta y una serie
-                // de parámetros relacionados al paginado, que son los que pasamos debajo al render como pagination
-                const result = await manager.getProductsPaginated(req.query.page * productsPerPage, productsPerPage);
-    
-                // Esto es solo un auxiliar para la plantilla de Handlebars, a efectos de evitar más código
-                const pagesArray = [];
-                for (let i = 0; i < result.totalPages; i++) pagesArray.push({ index: i, indexPgBar: i + 1 });
-    
-                const pagination = {
-                    baseUrl: baseUrl,
-                    limit: result.limit,
-                    offset: result.offset,
-                    totalPages: result.totalPages,
-                    totalDocs: result.totalDocs,
-                    page: result.page - 1,
-                    nextPageUrl: `${baseUrl}?page=${result.nextPage - 1}`,
-                    prevPageUrl: `${baseUrl}?page=${result.prevPage - 1}`,
-                    hasPrevPage: result.hasPrevPage,
-                    hasNextPage: result.hasNextPage,
-                    pagesArray: pagesArray
+            if (data !== null && req.sessionStore.userValidated) {
+                if (req.sessionStore.userAdmin) {
+                    res.render('private_admin', {});
+                } else {
+                    res.render('private_general', { user: req.sessionStore });
                 }
-    
-                // Si userValidated es true, significa que el login fue correcto y se renderiza la lista
-                // de productos (obviamente podrían renderizarse otras páginas en función de lo elegido
-                // en un menu por ejemplo)
-                res.render('products', { products: result.docs, pagination: pagination });
             } else {
-                // Si userValidated es false, hubo un error en los datos, se vuelve al login
-                res.render('login', {
-                    sessionInfo: req.session.userValidated !== undefined ? req.session : req.sessionStore
-                });
+                res.render('login', { sessionInfo: req.sessionStore });
             }
-        }); 
+
+        });
+    });
+
+    router.get('/ae', async (req, res) => {
+        res.render('authentication_err', {});
+    });
+
+    router.get('/register', async (req, res) => {
+        res.render('registration', {});
+    });
+
+    router.post('/login', async (req, res) => {
+        req.sessionStore.userValidated = false;
+        const { login_email, login_password } = req.body; // Desestructuramos el req.body
+
+        const user = await userModel.findOne({ userName: login_email });
+
+        if (!user) {
+            req.sessionStore.errorMessage = 'No se encuentra el usuario';
+            res.redirect('http://localhost:3000');
+        } else if (!isValidPassword(user, login_password)) {
+            req.sessionStore.errorMessage = 'Clave incorrecta';
+            res.redirect('http://localhost:3000');
+            // res.redirect('http://localhost:3000/ae');
+        } else {
+            req.sessionStore.userValidated = true;
+            req.sessionStore.errorMessage = '';
+            req.sessionStore.firstName = user.firstName;
+            req.sessionStore.lastName = user.lastName;
+            res.redirect('http://localhost:3000');
+        }
+
+      /*  if (login_email === 'idux.net@gmail.com' && login_password === 'abc123') {
+            req.sessionStore.userValidated = true;
+            req.sessionStore.errorMessage = '';
+            res.redirect('http://localhost:3000');
+        } else {
+            req.sessionStore.errorMessage = 'Usuario o clave no válidos';
+            res.redirect('http://localhost:3000/ae');
+        } */
     });
 
     router.get('/logout', async (req, res) => {
-        req.session.userValidated = req.sessionStore.userValidated = false;
+        req.sessionStore.userValidated = false;
 
         req.session.destroy((err) => {
             req.sessionStore.destroy(req.sessionID, (err) => {
                 if (err) console.log(`Error al destruir sesión (${err})`);
-
-                // Se recarga la página base en el browser
                 console.log('Sesión destruída');
-                res.redirect(baseUrl);
+                res.redirect('http://localhost:3000');
             });
         })
     });
 
-    router.post('/login', async (req, res) => {
-        const { login_email, login_password } = req.body; // Desestructuramos el req.body
-        const user = await users.validateUser(login_email, login_password);
+    router.get('/regfail', async (req, res) => {
+        res.render('registration_err', {});
+    });
 
-        if (user === null) { // Datos no válidos
-            req.session.userValidated = req.sessionStore.userValidated = false;
-            req.session.errorMessage = req.sessionStore.errorMessage = 'Usuario o clave no válidos';
-        } else {
-            req.session.userValidated = req.sessionStore.userValidated = true;
-            req.session.errorMessage = req.sessionStore.errorMessage = '';
-        }
-
-        // Se recarga la página base en el browser
-        res.redirect(baseUrl);
+    // Solo incluímos passport desde el archivo de estrategias y realizamos la llamada al middleware de autenticación
+    // En caso de existir ya el mail en bbdd, redireccionará a /regfail, sino permitirá continuar con /register
+    router.post('/register', passport.authenticate('authRegistration', { failureRedirect: '/regfail' }), async (req, res) => {
+        const { firstName, lastName, userName, password } = req.body; // Desestructuramos los elementos del body
+        if (!firstName || !lastName || !userName || !password ) res.status(400).send('Faltan campos obligatorios en el body');
+        const newUser = { firstName: firstName, lastName: lastName, userName: userName, password:password};
+        
+        // const process = userModel.create(newUser);
+        res.status(200).send({ message: 'Todo ok para cargar el usuario', data: newUser });
     });
 
     return router;
