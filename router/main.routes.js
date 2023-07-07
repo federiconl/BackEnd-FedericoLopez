@@ -81,7 +81,8 @@ const mainRoutes = (io, store, productsPerPage,baseUrl) => {
 
     // Solo incluímos passport desde el archivo de estrategias y realizamos la llamada al middleware de autenticación
     // En caso de existir ya el mail en bbdd, redireccionará a /regfail, sino permitirá continuar con /register
-    router.post('/register', passport.authenticate('authRegistration', { failureRedirect: '/regfail' }), async (req, res) => {
+    router.post('/register', 
+    passport.authenticate('authRegistration', { failureRedirect: '/regfail' }), async (req, res) => {
         const { firstName, lastName, userName, password } = req.body; // Desestructuramos los elementos del body
         if (!firstName || !lastName || !userName || !password ) res.status(400).send('Faltan campos obligatorios en el body');
         const newUser = { firstName: firstName, lastName: lastName, userName: userName, password:password};
