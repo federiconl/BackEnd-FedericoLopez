@@ -1,7 +1,7 @@
 import { Router } from "express";
 import userModel from "../model/usersModel.js";
 import { createHash, isValidPassword } from "../utils.js";
-import passport from "../auth/passport.local.js"
+import {passport} from "../auth/passport.local.js"
 import { store,productsPerPage,baseUrl } from "../server.js";
 
 const mainRoutes = (io, store, productsPerPage,baseUrl) => {    
@@ -23,6 +23,8 @@ const mainRoutes = (io, store, productsPerPage,baseUrl) => {
 
         });
     });
+
+    
 
     router.get('/pg', async (req,res) => {
         res.render('private_general', {});
@@ -77,14 +79,14 @@ const mainRoutes = (io, store, productsPerPage,baseUrl) => {
 
     // Solo incluímos passport desde el archivo de estrategias y realizamos la llamada al middleware de autenticación
     // En caso de existir ya el mail en bbdd, redireccionará a /regfail, sino permitirá continuar con /register
-    router.post('/register', 
-    passport.authenticate('authRegistration', { failureRedirect: '/regfail' }), async (req, res) => {
+    router.post('/register',passport.authenticate('authRegistration', { failureRedirect: '/regfail' }), async (req, res) => {
         const { firstName, lastName, userName, password } = req.body; // Desestructuramos los elementos del body
         if (!firstName || !lastName || !userName || !password ) res.status(400).send('Faltan campos obligatorios en el body');
-        const newUser = { firstName: firstName, lastName: lastName, userName: userName, password:password};
+        const newUser = { firstName: firstName, lastName: lastName, userName: userName, password:createHash(password)};
         
-        // const process = userModel.create(newUser);
-        res.status(200).send({ message: 'Todo ok para cargar el usuario', data: newUser });
+        const process = userModel.create(newUser);
+        console.log(newUser)
+        res.status(200).send({ message: 'Todo ok para cargar el usuario', data: process });
     });
 
     return router;

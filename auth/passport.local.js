@@ -5,9 +5,10 @@ import userModel from '../model/usersModel.js';
 
 
 
+
 const verifyAuthRegistration = async (userName, password, done) => {
     try {
-        const user = await userModel.findOne({ userName: userName });
+        const user = await userModel.findOne({userName: userName });
 
         if (user === null) {
             
@@ -20,8 +21,8 @@ const verifyAuthRegistration = async (userName, password, done) => {
     }
 };
 
-passport.use('authRegistration', new LocalStrategy({ usernameField: 'userName', passwordField: 'password' }, verifyAuthRegistration));
-
+passport.use('authRegistration', new LocalStrategy({ userNameField: 'userName', passwordField: 'password' }, verifyAuthRegistration));
+const initializePassport = () =>{
 passport.serializeUser((user, done) => {
     done(null, user._id);
 });
@@ -34,5 +35,5 @@ passport.deserializeUser(async (id, done) => {
         done(err.message);
     }
 });
-
-export default passport;
+}
+export {passport , initializePassport};

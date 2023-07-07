@@ -15,10 +15,12 @@ import userRoutes from './router/userRoutes.js';
 import mainRoutes from './router/main.routes.js';
 
 import passport from 'passport';
-
+import initializePassportGithub from './auth/passport.github.js'
+import { initializePassport } from './auth/passport.local.js';
 
 
 import { __dirname } from './utils.js';
+import sessionRoutes_gh from './router/session.router.github.js';
 
 const PUERTO = parseInt(process.env.PUERTO) || 3000;
 const MONGOOSE_URL = 'mongodb://127.0.0.1/BackendFedericoLopez';
@@ -57,15 +59,15 @@ app.use(session({
 }));
 
 //pasport
-
-app.use(passport.initialize());
-app.use(passport.session());
+initializePassportGithub();
+initializePassport();
 
 // Endpoint API//
 app.use('/api', productRoutes(io));
 app.use('/api', routerCart(io));
 app.use('/api', userRoutes(io));
 app.use('/', mainRoutes(io, store, baseUrl, productsPerPage));
+app.use('/api/sessions', sessionRoutes_gh());
 
 // Contenido static
 app.use('/public', express.static(`${__dirname}/public`));
