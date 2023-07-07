@@ -24,6 +24,10 @@ const mainRoutes = (io, store, productsPerPage,baseUrl) => {
         });
     });
 
+    router.get('/pg', async (req,res) => {
+        res.render('private_general', {});
+    });
+
     router.get('/ae', async (req, res) => {
         res.render('authentication_err', {});
     });
@@ -44,23 +48,15 @@ const mainRoutes = (io, store, productsPerPage,baseUrl) => {
         } else if (!isValidPassword(user, login_password)) {
             req.sessionStore.errorMessage = 'Clave incorrecta';
             res.redirect('http://localhost:3000');
-            // res.redirect('http://localhost:3000/ae');
+        
         } else {
             req.sessionStore.userValidated = true;
             req.sessionStore.errorMessage = '';
             req.sessionStore.firstName = user.firstName;
             req.sessionStore.lastName = user.lastName;
-            res.redirect('http://localhost:3000');
+            res.redirect('http://localhost:3000/pg');
         }
 
-      /*  if (login_email === 'idux.net@gmail.com' && login_password === 'abc123') {
-            req.sessionStore.userValidated = true;
-            req.sessionStore.errorMessage = '';
-            res.redirect('http://localhost:3000');
-        } else {
-            req.sessionStore.errorMessage = 'Usuario o clave no válidos';
-            res.redirect('http://localhost:3000/ae');
-        } */
     });
 
     router.get('/logout', async (req, res) => {
