@@ -1,7 +1,7 @@
 import { Router } from "express";
 import Users from "../services/UsersManager.js";
 import { __dirname } from "../utils.js";
-
+import { authentication, authorization } from "../auth/passport.local.js";
 // Exportamos todo el paquete de endpoints como función (userRoutes) que toma un argumento (io)
 // de esta manera al importarlo en server, podremos "inyectar" io para emitir eventos desde aquí
 const userRoutes = (io) => {
@@ -9,15 +9,9 @@ const userRoutes = (io) => {
     const manager = new Users();
     // const manager = new Users(`${__dirname}/data/users.json`);
 
-    const validate = async (req, res, next) => {
-        if (req.session.userValidated) {
-            next();
-        } else {
-            res.status(401).send({ status: 'ERR', error: 'No tiene autorización para realizar esta solicitud' });
-        }
-    }
+    
        
-    router.get('/users/:id?',  async (req, res) => { // ? indica que el parámetro es opcional
+    router.get('/users/:id?',authentication('jwtAuth'),  async (req, res) => { // ? indica que el parámetro es opcional
         try {
             if (req.params.id === undefined) {
                 const users = await manager.getUsers();
@@ -31,7 +25,7 @@ const userRoutes = (io) => {
         }
     });
     
-    router.post('/users', validate, async (req, res) => {
+    router.post('/users', authentication('jwtAuth'), authorization('admin'),async (req, res) => {
         try {
             await manager.addUser(req.body);
             // Al haber "inyectado" io, podemos emitir eventos sin problemas al socket
@@ -48,7 +42,7 @@ const userRoutes = (io) => {
         }
     });
     
-    router.put('/users/:id', validate, async (req, res) => {
+    router.put('/users/:id', authentication('jwtAuth'), async (req, res) => {
         try {
             await manager.updateUser(req.params.id, req.body);
         
@@ -62,7 +56,7 @@ const userRoutes = (io) => {
         }
     });
     
-    router.delete('/users/:id', validate, async(req, res) => {
+    router.delete('/users/:id', authentication('jwtAuth'), async(req, res) => {
         try {
             await manager.deleteUser(req.params.id);
         

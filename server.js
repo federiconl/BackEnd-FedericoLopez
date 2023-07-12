@@ -16,7 +16,7 @@ import mainRoutes from './router/main.routes.js';
 
 import passport from 'passport';
 import initializePassportGithub from './auth/passport.github.js'
-import { initializePassport } from './auth/passport.local.js';
+import { initializePassport , initPassport } from './auth/passport.local.js';
 
 
 import { __dirname } from './utils.js';
@@ -24,7 +24,7 @@ import sessionRoutes_gh from './router/session.router.github.js';
 
 const PUERTO = parseInt(process.env.PUERTO) || 3000;
 const MONGOOSE_URL = 'mongodb://127.0.0.1/BackendFedericoLopez';
-const SESSION_SECRET = process.env.SESSION_SECRET;
+const SESSION_SECRET = 'perritonoah0108';
 export const baseUrl = `http://localhost:${PUERTO}`;
 export const productsPerPage = 10;
 
@@ -61,6 +61,7 @@ app.use(session({
 //pasport
 initializePassportGithub();
 initializePassport();
+initPassport();
 
 // Endpoint API//
 app.use('/api', productRoutes(io));
