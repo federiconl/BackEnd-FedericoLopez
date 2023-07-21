@@ -1,67 +1,20 @@
 import { Router } from "express";
-import Products from "../services/productsManager.js";
 import { __dirname } from "../utils.js";
 import { authentication, authorization } from "../auth/passport.local.js";
+import { getProducts,deleteProduct,addProduct,uploadProduct, getProductsRender } from "../controller/product.controller.js";
 const router = Router();
-const manager = new Products();
 
 const productRoutes = (io) => {
 
+    router.get('/viewproducts', authentication('jwtAuth', getProductsRender))
 
+    router.get('/products',authentication('jwtAuth'), getProducts );
 
-    router.get('/products',authentication('jwtAuth'),async (req, res) => {
-        try {
-            const products = await manager.getProducts();
-            res.status(200).send({ status: 'OK', data: products });
-        } catch (err) {
-            res.status(500).send({ status: 'ERR', error: err });
-        }
-    });
+    router.post('/products', authentication('jwtAuth'), addProduct);
     
-
-
-    router.post('/products', authentication('jwtAuth'), async (req, res) => {
-        try {
-            await manager.addProduct(req.body);
+    router.put('/products', authentication('jwtAuth'), uploadProduct);
     
-            if (manager.checkStatus() === 1) {
-                res.status(200).send({ status: 'OK', msg: manager.showStatusMsg() });
-            } else {
-                res.status(400).send({ status: 'ERR', error: manager.showStatusMsg() });
-            }
-        } catch (err) {
-            res.status(500).send({ status: 'ERR', error: err });
-        }
-    });
-    
-    router.put('/products', authentication('jwtAuth'), async (req, res) => {
-        try {
-            const { id, field, data } = req.body;
-            await manager.updateProduct(id, field, data);
-        
-            if (manager.checkStatus() === 1) {
-                res.status(200).send({ status: 'OK', msg: manager.showStatusMsg() });
-            } else {
-                res.status(400).send({ status: 'ERR', error: manager.showStatusMsg() });
-            }
-        } catch (err) {
-            res.status(500).send({ status: 'ERR', error: err });
-        }
-    });
-    
-    router.delete('/products', authentication('jwtAuth'), async(req, res) => {
-        try {
-            await manager.deleteProduct(req.body.id);
-        
-            if (manager.checkStatus() === 1) {
-                res.status(200).send({ status: 'OK', msg: manager.showStatusMsg() });
-            } else {
-                res.status(400).send({ status: 'ERR', error: manager.showStatusMsg() });
-            }
-        } catch (err) {
-            res.status(500).send({ status: 'ERR', error: err });
-        }
-    });
+    router.delete('/products', authentication('jwtAuth'), deleteProduct);
 
     return router;
 }

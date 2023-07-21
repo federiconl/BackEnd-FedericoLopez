@@ -1,15 +1,8 @@
 import mongoose from 'mongoose';
-// Es necesario importar el modelo de producto para el populate
 
-
-mongoose.pluralize(null); // Importante! para no tener problemas con Mongoose
-
+mongoose.pluralize(null); 
 const collection = 'carts';
 
-// El esquema de este carrito de ejemplo es básico, tan solo un campo de tipo fecha para
-// almacenar el día y hora de creación del carrito, la última actualizción y un array con la lista de productos
-// (pid = id de producto y qty = cantidad).
-// Sobre este array se realiza el populate para tener el detalle completo de productos en la consulta
 const schema = new mongoose.Schema({
     created_at: Date,
     updated_at: Date,
@@ -20,9 +13,6 @@ const schema = new mongoose.Schema({
         }
     ]
 });
-
-// Aprovechamos el middleware pre para completar automáticamente el campo de fecha created_at
-// cuando se inserta un nuevo registro, y el updated_at cuando se actualiza
 schema.pre('save', function (next) {
     this.created_at = new Date();
     next();
@@ -32,11 +22,6 @@ schema.pre('update', function (next) {
     next();
 });
 
-// También se puede activar el populate automático utilizando el middleware pre
-// Atención, recordar importar el productModel arriba!
-/* schema.pre('find', function() {
-    this.populate({ path: 'products.pid', model: productModel });
-}); */
 
 const cartModel = mongoose.model(collection, schema);
 

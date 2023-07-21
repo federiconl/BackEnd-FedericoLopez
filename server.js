@@ -2,7 +2,6 @@ import {} from 'dotenv/config';
 
 import http from 'http';
 import express from 'express';
-import mongoose from 'mongoose';
 import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
 import cookieParser from 'cookie-parser';
@@ -14,24 +13,22 @@ import routerCart from './router/cartsRouter.js';
 import userRoutes from './router/userRoutes.js';
 import mainRoutes from './router/main.routes.js';
 
-import passport from 'passport';
+import MongoSingleton from './services/mongo.class.js';
 import initializePassportGithub from './auth/passport.github.js'
 import { initializePassport , initPassport } from './auth/passport.local.js';
 
 
 import { __dirname } from './utils.js';
 import sessionRoutes_gh from './router/session.router.github.js';
+import config from './config.js'
 
-const PUERTO = parseInt(process.env.PUERTO) || 3000;
-const MONGOOSE_URL = 'mongodb://127.0.0.1/BackendFedericoLopez';
 const SESSION_SECRET = 'perritonoah0108';
-export const baseUrl = `http://localhost:${PUERTO}`;
+export const baseUrl = `http://localhost:${config.SERVER_PORT}`;
 export const productsPerPage = 10;
 
 // SERVIDOR EXPRESS y SOCKET.IO INTEGRADO
 const app = express();
 const server = http.createServer(app);
-// Creamos nueva instancia para el servidor socket.io, activando módulo cors con acceso desde cualquier lugar (*)
 const io = new Server(server, {
   cors: {
       origin: "*",
@@ -49,7 +46,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(SESSION_SECRET));
 
 //manejo sessions
-export const store = MongoStore.create({mongoUrl:MONGOOSE_URL, mongoOptions:{}, ttl: 30});
+export const store = MongoStore.create({mongoUrl:config.MONGOOSE_URL, mongoOptions:{}, ttl: 30});
 app.use(session({
     store: store,
     secret: SESSION_SECRET,
@@ -82,7 +79,7 @@ app.set('views', `${__dirname}/views`);
 
 
 //Eventos socket.io
-io.on('connection', (socket) => { // Escuchamos el evento connection por nuevas conexiones de clientes
+io.on('connection', (socket) => { 
     console.log(`Cliente conectado (${socket.id})`);
     
     // Emitimos el evento server_confirm
@@ -105,16 +102,14 @@ io.on('connection', (socket) => { // Escuchamos el evento connection por nuevas 
 
 // ACTIVACION SERVIDOR GENERAL
 try {
-  await mongoose.connect(MONGOOSE_URL);
-  
-  server.listen(PUERTO, () => {
-      console.log(`Servidor iniciado en puerto ${PUERTO}`);
+  //MongoSingleton.getInstance();
+
+  app.listen(config.SERVER_PORT, () => {
+      console.log(`Servidor iniciado en puerto ${config.SERVER_PORT}`);
   });
 } catch(err) {
-  console.log(`No se puede conectar con el servidor de bbdd (${err.message})`);
+  console.log(`No se puede iniciar el servidor (${err.message})`);
 }
-
-
 
 
 

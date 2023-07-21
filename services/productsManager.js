@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import productModel from '../model/productModel.js';
 
-class Products {
+class ProductsMongo {
     constructor() {
         this.products = [];
         this.status = 0;
@@ -60,7 +60,7 @@ class Products {
             const queryOptions = {
                 offset: offset,
                 limit: itemsPerPage,
-                lean: true // habilitamos esta opción para evitar problemas con Handlebars
+                lean: true 
             }
             const products = await productModel.paginate({}, queryOptions);
             
@@ -113,4 +113,4 @@ class Products {
     }
 }
 
-export default Products;
+export default ProductsMongo;
