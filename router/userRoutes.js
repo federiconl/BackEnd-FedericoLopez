@@ -6,7 +6,7 @@ import { addUser, deleteUser, getUsers, updateUser } from "../controller/users.c
 const userRoutes = (io) => {
     const router = Router();
 
-    router.get('/users/:id?',authentication('jwtAuth'), getUsers);
+    router.get('/users/:id?', getUsers);
     
     router.post('/users', authentication('jwtAuth'), authorization('admin'),addUser);
     
