@@ -111,8 +111,7 @@ res.status(200).send({ status: 'OK', result: result });
 //sms
 const client = twilio('ACc06bfa544decd8bee2e41fbb0e87855f', 'bbe5cd0517f24a596534fa9bb7742cf8')
 app.get('/sms', async (req, res) => {
-    // Simplemente como recordatorio práctico, se toma nombre y producto desde la URL de la solicitud
-    // Ejemplo: http://localhost:3030/sms?nombre=Carlos&producto=Alfajor
+  
     const nombre = req.query.nombre;
     const producto = req.query.producto;
 
