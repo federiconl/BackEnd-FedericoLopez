@@ -108,6 +108,24 @@ app.get('/mail', async (req,res)=>{
 res.status(200).send({ status: 'OK', result: result });
 })
 
+//sms
+const client = twilio('ACc06bfa544decd8bee2e41fbb0e87855f', 'bbe5cd0517f24a596534fa9bb7742cf8')
+app.get('/sms', async (req, res) => {
+    // Simplemente como recordatorio práctico, se toma nombre y producto desde la URL de la solicitud
+    // Ejemplo: http://localhost:3030/sms?nombre=Carlos&producto=Alfajor
+    const nombre = req.query.nombre;
+    const producto = req.query.producto;
+
+    const result = await client.messages.create({
+        body: `Gracias ${nombre}, tu solicitud del producto ${producto} ha sido aprobada`,
+        from: '+14786069142',
+        to: '+4915223090185'
+    })
+
+    res.status(200).send({ status: 'OK', result: result });
+})
+
+
 //Eventos socket.io
 io.on('connection', (socket) => { 
     console.log(`Cliente conectado (${socket.id})`);
