@@ -2,11 +2,41 @@
 //const manager = new Products();
 
 import factoryProducts from "../services/factoryProducts.js";
+import { Faker, en } from '@faker-js/faker';
 
+const faker = new Faker({ locale: [en] })
 
 const manager = new factoryProducts(); 
 
 
+//Mocking Products
+export function generateMockProducts (){
+    const mockProducts=[];
+    for (let i = 1; i <= 100; i++) {
+        const newProduct = {
+            id: faker.database.mongodbObjectId(),
+            title: faker.commerce.productName(),
+            price: faker.commerce.price(),
+            rating: faker.helpers.rangeToNumber({ min: 1, max: 10 }),
+            stock:faker.number.int(50),
+            brand: faker.company.name(),
+            category:faker.commerce.department() ,
+            thumbnail: faker.image.url(),
+            images: faker.image.url(),
+        };
+        mockProducts.push(newProduct);
+      }
+      return mockProducts;
+}
+
+export const getMockProducts = async (req,res) =>{
+    const mockProducts= generateMockProducts();
+    res.json(mockProducts)
+};
+     
+
+
+//Endpoints
 export const getProductsRender = async (req,res) =>{
     try {
         const products = await manager.getProducts();

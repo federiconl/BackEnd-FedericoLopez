@@ -1,6 +1,6 @@
 import { Router } from "express";
 import userModel from "../model/usersModel.js";
-import { createHash, isValidPassword } from "../utils.js";
+import { createHash, isValidPassword } from "../utils/utils.js";
 import {passport, authentication,authorization} from "../auth/passport.local.js"
 import { store,productsPerPage,baseUrl } from "../server.js";
 import { authToken, generateToken } from "../auth/jwt.config.js";

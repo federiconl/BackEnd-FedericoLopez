@@ -1,7 +1,7 @@
 import {} from 'dotenv/config';
-import { __dirname } from './utils.js';
-import config from './config.js'
-
+import config from '../BackEndNew-FedericoLopez/utils/config.js'
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 import http from 'http';
 import express from 'express';
 import { engine } from 'express-handlebars';
@@ -11,6 +11,8 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import nodemailer from 'nodemailer' ;
 import twilio from 'twilio';
+import errorsDict from './utils/dictionary.js';
+import compression from 'express-compression';
 //Routers
 import productRoutes from './router/productsRoutes.js';
 import routerCart from './router/cartsRouter.js';
@@ -19,6 +21,7 @@ import mainRoutes from './router/main.routes.js';
 import sessionRoutes_gh from './router/session.router.github.js';
 import businessRoutes from './router/business.routes.js'
 import orderRoutes from './router/orders.routes.js'
+import customError from './services/custonError.js';
 
 //Passports
 import initializePassportGithub from './auth/passport.github.js'
@@ -39,7 +42,7 @@ const io = new Server(server, {
       allowedHeaders:'Content-Type, Authorization'
   }
 });
-
+app.use(compression({ brotli: {enabled: true, zlib: {}} })); 
 
 // Parseo correcto de urls
 app.use(express.json());
@@ -71,7 +74,9 @@ app.use('/', mainRoutes(io, store, baseUrl, productsPerPage));
 app.use('/api/sessions', sessionRoutes_gh());
 app.use('/api/orders', orderRoutes());
 app.use('/api/business',businessRoutes());
-
+app.all('*', (req, res, next) => {
+    throw new customError(errorsDict.ROUTING_ERROR);
+});
 // Contenido static
 app.use('/public', express.static(`${__dirname}/public`));
 

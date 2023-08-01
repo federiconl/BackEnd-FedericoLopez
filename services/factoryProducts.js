@@ -1,5 +1,4 @@
-import config from '../config.js';
-
+import config from '../utils/config.js';
 import MongoSingleton from '../services/mongo.class.js';
 
 import MemProducts from '../services/productsMemory.js';

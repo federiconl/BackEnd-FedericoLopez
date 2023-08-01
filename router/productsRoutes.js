@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { __dirname } from "../utils.js";
+import { __dirname } from "../utils/utils.js";
 import { authentication, authorization } from "../auth/passport.local.js";
-import { getProducts,deleteProduct,addProduct,uploadProduct, getProductsRender } from "../controller/product.controller.js";
+import { getProducts,deleteProduct,addProduct,uploadProduct, getProductsRender, getMockProducts } from "../controller/product.controller.js";
 const router = Router();
 
 const productRoutes = (io) => {
@@ -16,6 +16,7 @@ const productRoutes = (io) => {
     
     router.delete('/products', authentication('jwtAuth'), deleteProduct);
 
+    router.get('/mockingproducts', authentication('jwtAuth'), getMockProducts);
     return router;
 }
 

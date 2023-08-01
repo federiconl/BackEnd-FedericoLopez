@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { __dirname } from "../utils.js";
+import { __dirname } from "../utils/utils.js";
 import { authentication, authorization } from "../auth/passport.local.js";
 import { addUser, deleteUser, getUsers, updateUser } from "../controller/users.controller.js";
 
