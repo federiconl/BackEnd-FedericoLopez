@@ -4,6 +4,7 @@ import * as url from 'url';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 import http from 'http';
 import express from 'express';
+import {addLogger} from './services/logger.service.js'
 import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
 import cookieParser from 'cookie-parser';
@@ -74,9 +75,9 @@ app.use('/', mainRoutes(io, store, baseUrl, productsPerPage));
 app.use('/api/sessions', sessionRoutes_gh());
 app.use('/api/orders', orderRoutes());
 app.use('/api/business',businessRoutes());
-app.all('*', (req, res, next) => {
+/*app.all('*', (req, res, next) => {
     throw new customError(errorsDict.ROUTING_ERROR);
-});
+});*/
 // Contenido static
 app.use('/public', express.static(`${__dirname}/public`));
 
@@ -128,6 +129,26 @@ app.get('/sms', async (req, res) => {
 
     res.status(200).send({ status: 'OK', result: result });
 })
+
+//winston
+
+app.get('/loggerTest', addLogger, async (req, res) => {
+
+    req.logger.debug(`${req.method} ${req.url} ${new Date().toLocaleTimeString()}`);
+
+    req.logger.http(`${req.method} ${req.url} ${new Date().toLocaleTimeString()}`);
+
+    req.logger.info(`${req.method} ${req.url} ${new Date().toLocaleTimeString()}`);
+
+    req.logger.error(`${req.method} ${req.url} ${new Date().toLocaleTimeString()}`);
+  
+
+   
+   
+    res.send('Registro de logs en la consola y archivo (si es producción)!');
+});
+   
+   
 
 
 //Eventos socket.io

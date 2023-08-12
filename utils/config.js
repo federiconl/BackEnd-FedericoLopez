@@ -11,7 +11,7 @@ program
 const cl_options = program.opts();
 
 dotenv.config({ path: cl_options.mode == 'DEVEL' ? './.env.development': './.env.production' });
-
+console.log(process.env.SERVER_PORT)
 
 const config = {
     SERVER_PORT: process.env.SERVER_PORT,
